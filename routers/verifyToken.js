@@ -14,11 +14,14 @@ module.exports = function(req,res,next)
     try{
         const verified = jwt.verify(token, ""+process.env.TOKEN_SECRET);
         req = verified;
+        jwt.verify(req.cookies['token'], 'TOKEN_SECRET', function(err, decodedToken){
+        req.user_name = decodedToken.username;
+    })
         next();
     }
     catch(err)
     {
         res.send('Invalid Token');
     }
+   
 }
-  
