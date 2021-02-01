@@ -1,3 +1,16 @@
+
+const express=require('express');
+authController=require('../controllers/auth');
+const mysql = require("mysql");
+const connection  = require('../Config/conn');
+const router=express.Router();
+
+
+router.post('/register',authController.register);
+
+
+module.exports = router ;
+
 const express = require('express');        
 const app = express();   
 const jwt = require('jsonwebtoken');              
@@ -47,14 +60,5 @@ const username = req.body.emailAddress;
 app.use('/api', router);
 
 app.listen(port, () => console.log('Go to localhost:' + port + "/api"));
-
-
-
-
-
-
-
-
-
 
 
