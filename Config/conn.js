@@ -1,14 +1,17 @@
 const mysql = require('mysql');
+const dotenv=require('dotenv')
 const JWT_SECRET = require('jsonwebtoken');  
+
+dotenv.config({path :'./env'})
+
 const conn = mysql.createConnection({
 
     host: 'localhost',
-    password: 'newpassword', 
+    password:'',
+   // password: 'newpassword', //when i switch to linux i use empty passwordS
     user:'root', 
     database: 'zatchshoping_db',
-    JWT_SECRET:'mysuperscretpassword',
-    JWT_EXPIRE_IN:'90d',
-    JWT_COOKIE_EXPIRES:'90'
+    JWT_SECRET:'mysuperscretpassword'
 });
 
 conn.connect((err) => {

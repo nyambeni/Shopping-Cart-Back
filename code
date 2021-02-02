@@ -1,0 +1,199 @@
+const mysql = require('mysql');
+const bcrypt=require('bcryptjs');
+const cookieParser=require('cookie-parser');
+const jwt = require('jsonwebtoken');  
+const connection  = require('../Config/conn');
+
+//registering a customer to the database
+exports.register=(req,res)=>{
+
+    
+
+    const {firstname,lastname,email,password,passwordconfirm}=req.body;
+    myquery='SELECT email FROM customers WHERE email = ?';
+    connection.conn.query(myquery,[email],async(error,rows,fields)=>{
+
+        if(error)
+        {
+            console.log(error);
+        }
+        if(rows.length>0)
+        {
+           return res.send('email already registered');
+        }
+        else if (password!==passwordconfirm)
+        {
+           return res.send('password entered does not match');
+        }
+        let hashedPassword= await bcrypt.hash(password,8);
+        console.log(hashedPassword);
+
+        myquery2='INSERT INTO customers SET ?'
+        connection.conn.query(myquery2,{firstname:firstname,lastname:lastname,email:email,password: hashedPassword},(error,rows,fields)=>
+        {
+            if(error)
+            {
+                console.log(error);
+            }
+            else{
+                console.log(rows);
+                res.send('user registered in the database');
+            }
+        })
+
+    })
+}
+
+
+
+
+/////new login
+
+
+exports.login2 = async function(req,res){
+    var email= req.body.email;
+    var password = req.body.password;
+    connection.conn.query('SELECT * FROM customers WHERE email = ?',[email], async function (error, results, fields) {
+      if (error) {
+        res.send({
+          "code":400,
+          "failed":"error ocurred"
+        })
+      }else{
+        if(results.length >0){
+          const comparision = await bcrypt.compare(password, results[0].password)
+          if(comparision){
+              res.send({
+                "code":200,
+                "success":"login sucessfull"
+              })
+          }
+          else{
+            res.send({
+                 "code":204,
+                 "success":"Email and password does not match"
+            })
+          }
+        }
+        else{
+          res.send({
+            "code":206,
+            "success":"Email does not exits"
+              });
+        }
+      }
+      });
+  }
+
+
+  exports.register2 = async function(req,res){
+    const password = req.body.password;
+    const saltRounds=10;
+    const encryptedPassword = await bcrypt.hash(password,8 )
+    var users={
+       "email":req.body.email,
+       "password":encryptedPassword
+     }
+    
+     connection.conn.query('INSERT INTO customers SET ?',users, function (error, results, fields) {
+      if (error) {
+        res.send({
+          "code":400,
+          "failed":"error ocurred"
+        })
+      } else {
+        res.send({
+          "code":200,
+          "success":"user registered sucessfully"
+            });
+        }
+    });
+  }
+
+
+
+  /*/////remove 
+  module.exports.authenticate=function(req,res){
+    var email=req.body.email;
+    var password=req.body.password;
+    connection.conn.query('SELECT * FROM customers WHERE email = ?',[email], function (error, results, fields) {
+      if (error) {
+          res.json({
+            status:false,
+            message:'there are some error with query'
+            })
+      }else{
+        if(results.length >0){
+          const comparision = (async(await bcrypt.compare(password, results[0].password)))
+            //if(password==results[0].password)
+            if(comparision)
+            {
+                res.json({
+                    status:true,
+                    message:'successfully authenticated'
+                })
+            }else{
+                res.json({
+                  status:false,
+                  message:"Email and password does not match"
+                 });
+            }
+         
+        }
+        else{
+          res.json({
+              status:false,    
+            message:"Email does not exits"
+          });
+        }
+      }
+    });
+}*/
+
+
+
+module.exports.Authent=(req, res, next) => {
+  connection.conn.query('SELECT * FROM customers WHERE email = ?',[req.body.email],(err, result) => {
+      // user does not exists
+      if (err) {
+        throw err;
+        //return res.status(400).send({
+        //  msg: err
+       // });
+      }
+      if (!result.length) {
+        return res.status(401).send('Username or password is incorrect!'
+      );
+      }
+      // check password
+      bcrypt.compare( req.body.password, result[0]['password'],
+        (bErr, bResult) => {
+          // wrong password
+          if (bErr) {
+            //throw bErr;
+            return res.status(401).send('Username or password is incorrect!'
+            );
+          }
+          if (bResult) {
+            const token = jwt.sign({
+                username: result[0].username,
+                userId: result[0].id
+              },
+              'SECRETKEY', {
+                expiresIn: '7d'
+              }
+            );
+           
+            return res.status(200).send({
+              msg: 'Logged in!',
+              token//,
+              //user: result[0]//user details appears including the password
+            });
+          }
+          return res.status(401).send('Username or password is incorrect!'
+          );
+        }
+      );
+    }
+  );
+};

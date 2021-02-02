@@ -30,8 +30,16 @@ const port = process.env.PORT || 3000;
 var router=express.Router();
 
 //defining routes
-app.use('/auth', register);
-app.use('/login',Login);
+
+//localhost:3000/auth/register
+app.use('/auth', register);//registering a customer
+
+
+//for admin localhost:3000/login/admin
+//for customer localhost:3000/login/customer
+app.use('/login',Login);//admin & customer login
+//
+//
 app.use('/admin',Admin);
 app.use('/customer',Customers);
 

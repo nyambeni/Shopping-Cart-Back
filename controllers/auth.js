@@ -4,56 +4,45 @@ const cookieParser=require('cookie-parser');
 const jwt = require('jsonwebtoken');  
 const connection  = require('../Config/conn');
 
-//login
 
-exports.login=async(req,res)=>{
-    try{
 
-        const {email,password}=req.body;
 
-        if(!email || !password)
-        {
-            return res.status(400).send('please provide username & password')
-        }
-        
-        
-        connection.conn.query('SELECT * FROM customers WHERE email = ? ',[req.body.email],async(error,results)=>{
-            console.log(results);
-            //if(!results || await bcrypt.compare())
-            //comparing the database password and the logging password
-            if(!results || !(await bcrypt.compare(password,results[0].password)))
-             {
+exports.register2=(req,res)=>{
 
-                    res.status(401).send('email or password is encorrect')
-            }
-            else{
-                const id=results[0].customer_id;//id of the user
+  const {username,password,passwordconfirm}=req.body;
+  myquery='SELECT email FROM customers WHERE username = ?';
+  connection.conn.query(myquery,[username],async(error,rows,fields)=>{
 
-                const token=jwt.sign({id},process.env.JWT_SECRET,{
-                    expiresIn:process.env.JWT_EXPIRES_IN
-                });
+      if(error)
+      {
+          console.log(error);
+      }
+      if(rows.length>0)
+      {
+         return res.send('username already registered');
+      }
+      else if (password!==passwordconfirm)
+      {
+         return res.send('password entered does not match');
+      }
+      let hashedPassword= await bcrypt.hash(password,8);
+      console.log(hashedPassword);
 
-                console.log("the token is :"+ token);
-                const cookieOption={
-                    expires:new Date(Date.now()+process.env.JWT_COOKIE_EXPIRES*24*60*60*1000),
-                    httponly:true
-                }
+      myquery2='INSERT INTO admin SET ?'
+      connection.conn.query(myquery2,{username:username,password: hashedPassword},(error,rows,fields)=>
+      {
+          if(error)
+          {
+              console.log(error);
+          }
+          else{
+              console.log(rows);
+              res.send('user registered in the database');
+          }
+      })
 
-                res.cookie(jwt,token,cookieOption);
-                results.status(200);
-            }
-
-        })
-
-    }catch(error){
-        console.log(error);
-
-    }
+  })
 }
-
-
-
-
 
 //registering a customer to the database
 exports.register=(req,res)=>{
@@ -94,3 +83,104 @@ exports.register=(req,res)=>{
 
     })
 }
+
+
+//this is for the admin login
+
+module.exports.AdminLogin=(req, res, next) => {
+  connection.conn.query('SELECT * FROM admin WHERE username = ?',[req.body.username],(err, result) => {
+      // user does not exists
+      if (err) {
+        throw err;
+        //return res.status(400).send({
+        //  msg: err
+       // });
+      }
+      if (!result.length) {
+        return res.status(401).send('Username or password is incorrect!'
+      );
+      }
+      // check password
+      bcrypt.compare( req.body.password, result[0]['password'],
+        (bErr, bResult) => {
+          // wrong password
+          if (bErr) {
+            //throw bErr;
+            return res.status(401).send('Username or password is incorrect!'
+            );
+          }
+          if (bResult) {
+            const token = jwt.sign({
+                username: result[0].username,
+                userId: result[0].id
+              },
+              'SECRETKEY', {
+                expiresIn: '7d'
+              }
+            );
+           
+            return res.status(200).send({
+              msg: 'Logged in!',
+              token,
+              user: result[0]//user details appears including the password
+            });
+          }
+          return res.status(401).send('Username or password is incorrect!'
+          );
+        }
+      );
+    }
+  );
+};
+
+
+
+  
+//customer login
+module.exports.Authent=(req, res, next) => {
+  connection.conn.query('SELECT * FROM customers WHERE email = ?',[req.body.email],(err, result) => {
+      // user does not exists
+      if (err) {
+        throw err;
+        //return res.status(400).send({
+        //  msg: err
+       // });
+      }
+      if (!result.length) {
+        return res.status(401).send('Username or password is incorrect!'
+      );
+      }
+      // check password
+      bcrypt.compare( req.body.password, result[0]['password'],
+        (bErr, bResult) => {
+          // wrong password
+          if (bErr) {
+            //throw bErr;
+            return res.status(401).send('Username or password is incorrect!'
+            );
+          }
+          if (bResult) {
+            const token = jwt.sign({
+                username: result[0].username,
+                userId: result[0].id
+              },
+              'SECRETKEY', {
+                expiresIn: '7d'
+              }
+            );
+           
+          return res.status(200).send({
+              msg: 'Logged in!',
+              token,
+              user: result[0]//user details appears including the password
+            });
+
+
+          }
+          return res.status(401).send('Username or password is incorrect!'
+          );
+        }
+      );
+    }
+  );
+};

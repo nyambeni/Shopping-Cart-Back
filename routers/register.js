@@ -6,6 +6,7 @@ const router=express.Router();
 
 
 router.post('/register',authController.register);
+//router.post('/reg',authController.register2);
 
 
 module.exports = router ;
