@@ -21,10 +21,26 @@ router.get('/profile/:id',(req,res)=>{
 
 })
 
-//cart table
+//customer add to cart (table)
+router.post('/addcart',(req,res)=>{
+    const {quantity,item_name}=req.body;
+
+    cart='INSERT INTO cart SET ?';
+    connection.conn.query(cart,{quantity:quantity,item_name: item_name},(error,rows,fields)=>
+      {
+          if(error)
+          {
+              console.log(error);
+          }
+          else{
+              console.log(rows);
+              res.send('items added to the database');
+          }
+      })
+})
 
 
-//payment
+//payment  NOT FUNCTIONALLY STILL WORKING ON IT
 router.put('/cpayment/:id',(req,res)=>{
 
     cpay='UPDATE payment_tbl SET totalPrice WHERE id_customer= ?';

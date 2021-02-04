@@ -22,7 +22,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors());
-//import a register file
+
 
 const port = process.env.PORT || 3000;        
 
@@ -35,12 +35,11 @@ var router=express.Router();
 app.use('/auth', register);//registering a customer
 
 
-//for admin localhost:3000/login/admin
-//for customer localhost:3000/login/customer
 app.use('/login',Login);//admin & customer login
 //
 //
 app.use('/admin',Admin);
+
 app.use('/customer',Customers);
 
 

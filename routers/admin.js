@@ -31,7 +31,24 @@ router.get('/customer/:id',(req,res)=>{
     })
 })
 
+//show cart
+router.get('/cart',(req,res)=>{
+    cart='SELECT * FROM cart';
+    connection.conn.query(cart,(error,rows,fields)=>
+    {
+        if(!error)
+        {
+            res.send(rows);
+        }else{
+            console.log(error);
+        }
+    })
+})
 
+
+
+
+//not yet working ....still working on it
 router.get('/viewpayment',(req,res)=>{
     payments='SELECT * FROM payment_tbl';
     connection.conn.query(payments,(error,rows,fields)=>{
