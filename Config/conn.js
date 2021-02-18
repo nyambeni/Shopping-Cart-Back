@@ -8,7 +8,6 @@ const conn = mysql.createConnection({
 
     host: 'localhost',
     password:'',
-   // password: 'newpassword', //when i switch to linux i use empty passwordS
     user:'root', 
     database: 'zatchshoping_db',
     JWT_SECRET:'mysuperscretpassword'
